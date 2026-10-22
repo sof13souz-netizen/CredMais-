@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administrar - Taxas</title>
+
+    <!-- Arquivo CSS da página -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/taxas.css') }}">
+</head>
+
+<body>
+
+    <!-- Cabeçalho da página -->
+    <header>
+
+        <!-- Logo do CredMais -->
+        <div class="area-logo">
+            <img class="logo" src="{{ url_for('logo') }}" alt="Logo CredMais">
+        </div>
+
+        <!-- Menu de navegação -->
+        <div class="menu">
+            <div class="item-menu">Dashboard</div>
+            <div class="item-menu">Perfil</div>
+            <div class="item-menu pagina-atual">Taxas</div>
+            <div class="item-menu">Simulação</div>
+            <div class="item-menu">Empréstimos</div>
+            <div class="item-menu">Movimentações</div>
+        </div>
+
+    </header>
+
+    <!-- Conteúdo principal -->
+    <main>
+
+        <!-- Título e botão de cadastro -->
+        <div class="cabecalho-taxas">
+
+            <div class="titulo-pagina">
+
+                <!-- Ícone da página -->
+                <div class="icone-taxas">
+                    <img src="{{ url_for('icone_taxas') }}" alt="Ícone de taxas">
+                </div>
+
+                <!-- Nome e descrição -->
+                <div class="texto-titulo">
+                    <h1>Administrar / Taxas</h1>
+                    <p>Administre suas taxas.</p>
+                </div>
+
+            </div>
+
+            <!-- Botão para cadastrar taxa -->
+            <button class="botao-cadastrar" type="button">
+                + Cadastrar taxa
+            </button>
+
+        </div>
+
+        <!-- Lista de taxas -->
+        <div class="lista-taxas">
+
+            <h2>Lista de Taxas</h2>
+
+            <!-- Cabeçalho da lista -->
+            <div class="linha-titulo">
+                <div>Data de referência</div>
+                <div>Taxa mensal</div>
+                <div>Ações</div>
+            </div>
+
+            <!-- Percorre as taxas recebidas do Python -->
+            {% for taxa in taxas %}
+
+                <div class="linha-taxa">
+
+                    <!-- Data registrada no banco -->
+                    <div>{{ taxa.DATA_REFERENCIA }}</div>
+
+                    <!-- Valor da taxa mensal -->
+                    <div>{{ taxa.TAXA_MENSAL }}%</div>
+
+                    <!-- Botões de ações -->
+                    <div class="botoes-acoes">
+
+                        <button class="botao-editar" type="button">
+                            Editar
+                        </button>
+
+                        <button class="botao-excluir" type="button">
+                            Excluir
+                        </button>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+            <!-- Mensagem exibida quando não houver taxas -->
+            <div class="mensagem-vazia"
+                 {% if taxas %}style="display: none;"{% else %}style="display: block;"{% endif %}>
+                Não há taxas cadastradas.
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Janela de confirmação de exclusão -->
+    <div class="fundo-modal" id="fundo-modal">
+
+        <div class="modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="titulo-modal">
+
+            <!-- Ícone de lixeira dentro do círculo -->
+            <div class="icone-modal">
+                <img src="{{ url_for('static', filename='Uploads/icone_excluir.png') }}"
+                     alt="Ícone de excluir">
+            </div>
+
+            <!-- Pergunta de confirmação -->
+            <h2 id="titulo-modal">Deseja excluir esta taxa?</h2>
+
+            <!-- Dados da taxa selecionada -->
+            <p class="informacao-taxa" id="informacao-taxa">
+                Selecione uma taxa para excluir.
+            </p>
+
+            <!-- Botões da janela -->
+            <div class="botoes-modal">
+
+                <button class="botao-confirmar"
+                        id="botao-confirmar"
+                        type="button">
+                    Excluir
+                </button>
+
+                <button class="botao-cancelar"
+                        id="botao-cancelar"
+                        type="button">
+                    Cancelar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- JavaScript da janela de exclusão -->
+    <script>
+
+        // Guarda a taxa selecionada
+        let taxaSelecionada = null;
+
+        // Busca os elementos da janela
+        const fundoModal = document.querySelector("#fundo-modal");
+        const informacaoTaxa = document.querySelector("#informacao-taxa");
+        const botaoConfirmar = document.querySelector("#botao-confirmar");
+        const botaoCancelar = document.querySelector("#botao-cancelar");
+
+        // Busca os botões de excluir
+        const botoesExcluir = document.querySelectorAll(".botao-excluir");
+
+        // Abre a janela ao clicar em excluir
+        botoesExcluir.forEach(function(botao) {
+
+            botao.addEventListener("click", function() {
+
+                // Guarda a linha selecionada
+                taxaSelecionada = botao.closest(".linha-taxa");
+
+                // Busca a data e o valor da taxa
+                const data = taxaSelecionada.children[0].textContent;
+                const taxa = taxaSelecionada.children[1].textContent;
+
+                // Exibe as informações na janela
+                informacaoTaxa.textContent =
+                    "Data: " + data + " | Taxa mensal: " + taxa;
+
+                // Mostra a janela
+                fundoModal.style.display = "flex";
+
+            });
+
+        });
+
+        // Fecha a janela
+        function fecharModal() {
+            fundoModal.style.display = "none";
+            taxaSelecionada = null;
+        }
+
+        // Botão cancelar
+        botaoCancelar.addEventListener("click", function() {
+            fecharModal();
+        });
+
+        // Botão confirmar
+        botaoConfirmar.addEventListener("click", function() {
+
+            if (taxaSelecionada !== null) {
+
+                // Remove a linha somente da página
+                taxaSelecionada.remove();
+
+                // Verifica se ainda existem taxas na tela
+                const taxasRestantes =
+                    document.querySelectorAll(".linha-taxa");
+
+                // Mostra a mensagem se a lista estiver vazia
+                if (taxasRestantes.length === 0) {
+                    document.querySelector(".mensagem-vazia").style.display = "block";
+                }
+
+                // Fecha a janela
+                fecharModal();
+
+            }
+
+        });
+
+        // Fecha a janela ao clicar fora dela
+        fundoModal.addEventListener("click", function(evento) {
+
+            if (evento.target === fundoModal) {
+                fecharModal();
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
